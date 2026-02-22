@@ -1,3 +1,14 @@
+
+import Navbar from './components/Navbar';'
+import Hero from './components/Hero';'
+import Learn from './components/Learn';'
+import Practice from './components/Practice';'
+import Quiz from './components/Quiz';'
+import Pricing from './components/Pricing';'
+import Footer from './components/Footer';'
+
+
+
 function App() {
   return (
     <div className="min-h-screen text-white overflow-hidden"
