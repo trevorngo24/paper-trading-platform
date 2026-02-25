@@ -1,35 +1,47 @@
 from fastapi import FastAPI
+from app.database import Base, engine
+Base.metadata.create_all(bind=engine)
+from app.database import session_local
+from app.auth import hash_password
+from app.models import User 
+from app.auth import verify_password
 
 app = FastAPI(title="Paper Trading Platform API")
-test = {
-    "Brady": 1,
-    "Teo" : 2,
-    "Trevor" : 3
-}
 
-@app.get("/health")
-def health():
-    return test
+@app.post("/register")
+def register(username: str, email: str, password: str):
+    db = session_local()
+    try:
+        hashed_pw = hash_password(password)
+        newUser = User(
+            username=username,
+            email=email,
+            hashed_password=hashed_pw,
+        )
+        db.add(newUser)
+        db.commit()
+        return {"message": "User created", "username": username}
+    finally:
+        db.close()
 
-@app.post("/health")
-def edithealth(input1: str, input2: int):
-    global test
-    if(input1 in test and input2 == test[input1]):
-        return "VALID"
-    else:
-        return "NAH"
-def encryption(input2: int):
-    global test
-    input2 += 3
-    return input2
+@app.post("/login")
+def login(username: str, password:str):
+    db = session_local
+    try:
+        user = db.query(User).filter(User.username == username).first()
+        if not user:
+            return{"error": "User Not Found"}
+        if not verify_password(password, user.hashed_password):
+            return{"error": "Invalid Password"}
+        return {"message": "Login Sucessful", "username": user.username}
+    
+    finally:
+        db.close()
+
+    
 
 
-@app.post("/makeaccount")
-def makeNewAccount(username: str, password: int):
-    global test
-    if(username in test):
-        return "Account name taken please try diffrent name"
-    else:
-        test[username] = encryption(password)
-        return "Account made Suceesfully"
+    
+
+    
 
