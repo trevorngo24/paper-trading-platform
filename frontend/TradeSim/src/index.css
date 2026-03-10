@@ -1,1 +1,49 @@
 @import "tailwindcss";
+
+@theme {
+  --color-ts-dark: #1a2a3a;
+  --color-ts-card: #243447;
+  --color-ts-border: #81a6c6;
+  --color-ts-cyan: #aacddc;
+  --color-ts-gold: #f3e3d0;
+  --color-ts-green: #aacddc;
+  --color-ts-purple: #d2c4b4;
+  --color-ts-red: #e8a090;
+
+  --font-display: "Press Start 2P", monospace;
+  --font-body: "Pixelify Sans", sans-serif;
+}
+
+body {
+  margin: 0;
+  background-color: #1a2a3a;
+  color: #f3e3d0;
+  font-family: "Pixelify Sans", sans-serif;
+  image-rendering: pixelated;
+}
+
+.pixel-card {
+  image-rendering: pixelated;
+  box-shadow:
+    4px 0  0 0 #81a6c6,
+   -4px 0  0 0 #81a6c6,
+    0  4px 0 0 #81a6c6,
+    0 -4px 0 0 #81a6c6;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse-border {
+  0%, 100% { box-shadow: 0 0 0 0   rgba(170, 205, 220, 0.4); }
+  50%       { box-shadow: 0 0 0 8px rgba(170, 205, 220, 0); }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-8px); }
+}
+
+.fade-up      { animation: fadeUp       0.7s ease        forwards; }
+.pulse-border { animation: pulse-border 2.5s ease-in-out infinite; }
+.float        { animation: float        3s   ease-in-out infinite; }

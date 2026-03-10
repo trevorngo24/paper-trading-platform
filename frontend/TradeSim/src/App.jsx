@@ -1,28 +1,27 @@
+import Navbar from "./components/Navbar";
+import Hero from "./components/Hero";
+import AvatarCard from "./components/AvatarCard";
+import BadgeGrid from "./components/BadgeGrid";
+import StreakTracker from "./components/StreakTracker";
+import Footer from "./components/Footer";
+import PixelSky from "./components/PixelSky";
 
-import Navbar from './components/Navbar';'
-import Hero from './components/Hero';'
-import Learn from './components/Learn';'
-import Practice from './components/Practice';'
-import Quiz from './components/Quiz';'
-import Pricing from './components/Pricing';'
-import Footer from './components/Footer';'
-
-
-
-function App() {
+export default function App() {
   return (
-    <div className="min-h-screen text-white overflow-hidden"
-    style={{ backgroundImage: `url('public/skybg.jpg')`, backgroundSize: 'cover'}}
-    >
+    <div className="min-h-screen relative">
+      <PixelSky />
       <Navbar />
-      <Hero />
-      <Learn />
-      <Practice />
-      <Quiz />
-      <Pricing />
+      <main className="relative z-10 max-w-5xl mx-auto px-6 pb-24">
+        <Hero />
+        <section className="flex flex-col md:flex-row gap-6 justify-center items-start mt-4">
+          <AvatarCard />
+          <div className="flex flex-col gap-4 flex-1">
+            <BadgeGrid />
+            <StreakTracker />
+          </div>
+        </section>
+      </main>
       <Footer />
-   </div>
-   );
-} 
-
-export default App;
+    </div>
+  );
+}
