@@ -8,7 +8,7 @@ export default function Hero() {
         TRADE<span className="text-[#aacddc]">SIM</span>
       </h1>
       <p className="mt-5 text-[#d2c4b4] font-body text-xl max-w-lg mx-auto leading-relaxed">
-        Learn markets, practice strategies, and earn badges — no real money at risk.
+        Learn markets, practice strategies, and earn badges. No real money at risk.
       </p>
       <div className="mt-8 flex justify-center gap-4 flex-wrap">
         <button className="font-body text-base px-8 py-3
