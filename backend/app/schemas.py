@@ -8,3 +8,7 @@ class UserCreate(BaseModel):
 class UserLogin(BaseModel):
     username: str
     password: str
+
+class token(BaseModel):
+    acess_token: str
+    token_type: str

@@ -5,3 +5,10 @@ db = "sqlite:///tradesim.db" # we still need to create the db engine
 engine = sa.create_engine(db, echo=True) # creates the bridge between python(sa) and db
 session_local = sessionmaker(bind=engine) # allows us to run queries on this engine
 Base = declarative_base() # Anything that inherits from Base will be treated as a database table.
+
+def get_db(): # access an database to query info -> close 
+    db = session_local()
+    try:
+        yield db
+    finally:
+        db.close()

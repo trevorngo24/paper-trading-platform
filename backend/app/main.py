@@ -3,7 +3,7 @@ from app.database import Base, engine
 from app import models
 from app.session import session_local
 from app.auth import hash_password, verify_password, create_access_token, get_current_user
-from app.models import User
+from app.models import User, Portfolio
 from app.schemas import UserCreate, UserLogin
 
 Base.metadata.create_all(bind=engine) # create the table if table doesnt exist 
@@ -31,6 +31,13 @@ def register(user: UserCreate):
         db.add(newUser) # add new user to db
         db.commit() # commit it to the db
         db.refresh(newUser)
+
+        portfolio = Portfolio( # when a user registers, we create a portfolio row them using their user_id and give them a balance of 10,000
+            user_id=newUser.id,
+            cash_balance=10000.0
+        )
+        db.add(portfolio)
+        db.commit()
         return {
             "message": "User created",
             "username": newUser.username,
@@ -43,7 +50,7 @@ def register(user: UserCreate):
 def login(user: UserLogin):
     db = session_local()
     try:
-        db_user = db.query(User).filter(User.username == user.username).first() # go inside the db and look the user table and find the row where the username matches the input username and give me the first match
+        db_user = db.query(User).filter(User.email == user.email).first() # go inside the db and look the user table and find the row where the username matches the input username and give me the first match
         if not db_user: # if not in there return error message
             raise HTTPException(status_code=404, detail="User not found")
 
@@ -66,6 +73,23 @@ def read_current_user(current_user: User = Depends(get_current_user)): # get_cur
         "email": current_user.email,
 
     }
+
+@app.get("/portfolio")
+def get_portfolio(current_user: User = Depends(get_current_user)):
+    db = session_local # we want to run the session in order to makes changes
+    try:
+        portfolio = db.query(Portfolio).filter(Portfolio.user_id == current_user.id).first() # find the portfolio associated to the user
+        
+        if not portfolio:
+            raise HTTPException(status_code=404, detail="Portfolio not found")
+        return {
+            "user.id": current_user.id,
+            "username": current_user.username,
+            "cash_balance": portfolio.cash_balance
+        }
+    finally:
+        db.close()
+
 
     
 
