@@ -9,7 +9,7 @@ class User(Base): # creates an database called users
     email: Mapped[str] = mapped_column(unique = True)
     hashed_password: Mapped[str]
 
-    portfolio : Mapped["Portfolio"] = relationship(back_populates="user") # user to portfolio
+    portfolio: Mapped["Portfolio"] = relationship(back_populates="user", uselist=False) # user to portfolio
 
     def __repr__(self) -> str:
         return f"<User(id={self.id}, username = {self.username}, email = {self.email})>"
@@ -19,7 +19,7 @@ class Portfolio(Base): # create table named portfolios
 
         id: Mapped[int] = mapped_column(primary_key=True) 
         user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), unique=True) # forgein key, every portfolio belongs to an user
-        cash_balance: Mapped[float] = mapped_column(default=10000.0) # every will start with an $10,000 balance
+        cash_balance: Mapped[float] = mapped_column(default=10000.0) # everyone will start with an $10,000 balance
 
         user: Mapped["User"] = relationship(back_populates="portfolio") # creates the bridge from porfolio to user
 

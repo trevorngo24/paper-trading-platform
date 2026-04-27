@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException, Depends
+from fastapi.security import OAuth2PasswordRequestForm
 from app.database import Base, engine
 from app import models
 from app.session import session_local
@@ -42,12 +43,14 @@ def register(user: UserCreate):
             "message": "User created",
             "username": newUser.username,
             "email": newUser.email,
+            "portfolio_id": portfolio.id,
+            "cash_balance": portfolio.cash_balance,
         }
     finally:
         db.close()
 
 @app.post("/login")
-def login(user: UserLogin):
+def login(user: OAuth2PasswordRequestForm = Depends()):
     db = session_local()
     try:
         db_user = db.query(User).filter(User.username == user.username).first() # go inside the db and look the user table and find the row where the username matches the input username and give me the first match
@@ -129,6 +132,7 @@ def buy_stock(symbol: str, quantity: int, current_user: User = Depends(get_curre
         }
     finally:
         db.close()
+    
 
 
 
