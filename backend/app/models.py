@@ -38,3 +38,14 @@ class Trade(Base):
 
      def __repr__(self) -> str:
           return f"<Trade(id={self.id}, user_id={self.user_id}, symbol={self.symbol}, quantity={self.quantity}, price={self.price}, trade_type={self.trade_type})>"
+
+class Holding(Base):
+     __tablename__ = "holdings"
+
+     id: Mapped[int] = mapped_column(primary_key=True)
+     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+     symbol: Mapped[str]
+     quantity: Mapped[int]
+
+     def __repr__(self) -> str:
+          return f"<Holding>(id={self.id}, user_id={self.user_id}, symbol={self.symbol}, quantity={self.quantity})>"

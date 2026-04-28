@@ -4,7 +4,7 @@ from app.database import Base, engine
 from app import models
 from app.session import session_local
 from app.auth import hash_password, verify_password, create_access_token, get_current_user
-from app.models import User, Portfolio, Trade
+from app.models import User, Portfolio, Trade, Holding
 from app.schemas import UserCreate, UserLogin
 
 Base.metadata.create_all(bind=engine) # create the table if table doesnt exist 
@@ -112,6 +112,22 @@ def buy_stock(symbol: str, quantity: int, current_user: User = Depends(get_curre
         
         portfolio.cash_balance -= total_cost
 
+        # Check if the user already owns this stock, if yes add more shares, if no create a new holding
+        holding = db.query(Holding).filter( # look inside the holdings table 
+            Holding.user_id == current_user.id, # find these rows
+            Holding.symbol == symbol.upper()
+        ).first() # retrieve the existing holding if it exists, or None of nothing exists
+
+        if holding:
+            holding.quantity += quantity
+        else:
+            holding = Holding(
+                user_id=current_user.id,
+                symbol=symbol.upper(),
+                quantity=quantity
+            )
+            db.add(holding)
+
         trade = Trade( # we create an row to store this into the Trade table
             user_id=current_user.id,
             symbol=symbol.upper(),
@@ -132,6 +148,26 @@ def buy_stock(symbol: str, quantity: int, current_user: User = Depends(get_curre
         }
     finally:
         db.close()
+
+# Finds all holdings for the logged-in user
+@app.get("/holdings") # creates an get route called holdings
+def get_holdings(current_user: User = Depends(get_current_user)): # depends get_current_user checks the JWT token and gives us the logged-in user
+    db = session_local() # opens the db session so we can query the db
+    try: # starts an safe block so we can close the db no matter what happens
+        holdings = db.query(Holding).filter( # look inside the holdings table and get all holdings associated with user_id
+            Holding.user_id == current_user.id
+        ).all()
+
+        return [ # for each holding, return the stock symbol and quantity
+            {
+                "symbol": h.symbol,
+                "quantity": h.quantity
+            }
+            for h in holdings # loops through every holding found in the db
+        ]
+    finally:
+        db.close()
+
     
 
 
