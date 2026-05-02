@@ -168,6 +168,88 @@ def get_holdings(current_user: User = Depends(get_current_user)): # depends get_
     finally:
         db.close()
 
+@app.post("/trade/sell")
+def sell_stock(symbol: str, quantity: int, current_user: User = Depends(get_current_user)):
+    db = session_local()
+    try:
+        portfolio = db.query(Portfolio).filter(Portfolio.user_id == current_user.id).first()
+
+        if not portfolio:
+            raise HTTPException(status_code=404, detail="Portfolio not found")
+        
+        if quantity <= 0:
+            raise HTTPException(status_code=400, detail="Quantity must be greater than 0")
+        
+        symbol = symbol = symbol.upper()
+        price = 100.0
+        total_value = price * quantity
+
+        holding = db.query(Holding).filter(
+            Holding.user_id == current_user.id
+            Holding.symbol == symbol
+        ).first() 
+        
+        if not holding:
+            raise HTTPException(status_code=404, detail="You do not own this stock")
+        
+        if holding.quantity < quantity:
+            raise HTTPException(status_code=400, detail="Not enough shares to sell")
+        
+        holding.quantity -= quantity
+        portfolio.cash_balance += total_value
+
+        if holding.quantity == 0:
+            db.delete(holding)
+        
+        trade = Trade(
+            user_id = current_user.id,
+            symbol=symbol,
+            quantity=quantity,
+            price=price,
+            trade_type="sell"
+
+        )
+        db.add(trade)
+        db.commit()
+
+        return {
+            "message": "Stock sold",
+            "symbol": symbol,
+            "quantity": quantity,
+            "price": price,
+            "total_value": total_value,
+            "new_balance": portfolio.cash_balance
+
+        }
+    finally:
+        db.close()
+
+@app.get("/trades")
+def get_trades(current_user: User = Depends(get_current_user)):
+    db = session_local()
+    try:
+        trades = db.query(Trade).filter(Trade.user_id == current_user.id).all()
+
+        return [
+            {
+                "symbol": t.symbol,
+                "quantity": t.quantity,
+                "price": t.price,
+                "trade_type": t.trade_type
+
+            }
+            for t in trades
+        ]
+    finally:
+        db.close()
+
+        
+
+        
+
+
+
+
     
 
 
