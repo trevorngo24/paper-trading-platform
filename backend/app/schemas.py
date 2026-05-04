@@ -1,5 +1,9 @@
 from pydantic import BaseModel # pydantic validates all inputed data 
 
+class TradeCreate(BaseModel):
+    symbol: str
+    quantity: int
+
 class UserCreate(BaseModel):
     username: str
     email: str

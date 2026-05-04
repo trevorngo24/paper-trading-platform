@@ -5,7 +5,7 @@ from app import models
 from app.session import session_local
 from app.auth import hash_password, verify_password, create_access_token, get_current_user
 from app.models import User, Portfolio, Trade, Holding
-from app.schemas import UserCreate, UserLogin
+from app.schemas import UserCreate, UserLogin, TradeCreate
 
 Base.metadata.create_all(bind=engine) # create the table if table doesnt exist 
 
@@ -94,18 +94,18 @@ def get_portfolio(current_user: User = Depends(get_current_user)):
         db.close()
 
 @app.post("/trade/buy") # post bc the user is sending data to the serber to create a trade, and that trade is stored in the db
-def buy_stock(symbol: str, quantity: int, current_user: User = Depends(get_current_user)):
+def buy_stock(trade_data: TradeCreate, current_user: User = Depends(get_current_user)):
     db = session_local()
     try:
         portfolio = db.query(Portfolio).filter(Portfolio.user_id == current_user.id).first()
         
         if not portfolio:
             raise HTTPException(status_code=404, detail="Portfolio not found")
-        if quantity <= 0:
+        if trade_data.quantity <= 0:
             raise HTTPException(status_code=400, detail="Quantity must be greater than 0")
         
         price = 100.0 # this is just an placeholder price, later we will change this using an external API to get real stock prices
-        total_cost = price * quantity
+        total_cost = price * trade_data.quantity
 
         if portfolio.cash_balance < total_cost:
             raise HTTPException(status_code=400, detail="Insufficient Funds")
@@ -115,33 +115,33 @@ def buy_stock(symbol: str, quantity: int, current_user: User = Depends(get_curre
         # Check if the user already owns this stock, if yes add more shares, if no create a new holding
         holding = db.query(Holding).filter( # look inside the holdings table 
             Holding.user_id == current_user.id, # find these rows
-            Holding.symbol == symbol.upper()
+            Holding.symbol == trade_data.symbol.upper()
         ).first() # retrieve the existing holding if it exists, or None of nothing exists
 
         if holding:
-            holding.quantity += quantity
+            holding.quantity += trade_data.quantity
         else:
             holding = Holding(
                 user_id=current_user.id,
-                symbol=symbol.upper(),
-                quantity=quantity
+                symbol=trade_data.symbol.upper(),
+                quantity=trade_data.quantity
             )
             db.add(holding)
 
-        trade = Trade( # we create an row to store this into the Trade table
+        new_trade = Trade( # we create an row to store this into the Trade table
             user_id=current_user.id,
-            symbol=symbol.upper(),
-            quantity=quantity,
+            symbol= trade_data.symbol.upper(),
+            quantity= trade_data.quantity,
             price=price,
             trade_type="buy"
         )
-        db.add(trade)
+        db.add(new_trade)
         db.commit()
 
         return {
             "message": "Stock purchased",
-            "symbol": symbol.upper(),
-            "quantity": quantity,
+            "symbol": trade_data.symbol.upper(),
+            "quantity": trade_data.quantity,
             "price": price,
             "total_cost": total_cost,
             "remaining_balance": portfolio.cash_balance
@@ -169,7 +169,7 @@ def get_holdings(current_user: User = Depends(get_current_user)): # depends get_
         db.close()
 
 @app.post("/trade/sell")
-def sell_stock(symbol: str, quantity: int, current_user: User = Depends(get_current_user)):
+def sell_stock(trade_data: TradeCreate, current_user: User = Depends(get_current_user)):
     db = session_local()
     try:
         portfolio = db.query(Portfolio).filter(Portfolio.user_id == current_user.id).first()
@@ -177,45 +177,45 @@ def sell_stock(symbol: str, quantity: int, current_user: User = Depends(get_curr
         if not portfolio:
             raise HTTPException(status_code=404, detail="Portfolio not found")
         
-        if quantity <= 0:
+        if trade_data.quantity <= 0:
             raise HTTPException(status_code=400, detail="Quantity must be greater than 0")
         
-        symbol = symbol = symbol.upper()
+        symbol = trade_data.symbol.upper()
         price = 100.0
-        total_value = price * quantity
+        total_value = price * trade_data.quantity
 
         holding = db.query(Holding).filter(
-            Holding.user_id == current_user.id
+            Holding.user_id == current_user.id,
             Holding.symbol == symbol
         ).first() 
         
         if not holding:
             raise HTTPException(status_code=404, detail="You do not own this stock")
         
-        if holding.quantity < quantity:
+        if holding.quantity < trade_data.quantity:
             raise HTTPException(status_code=400, detail="Not enough shares to sell")
         
-        holding.quantity -= quantity
+        holding.quantity -= trade_data.quantity
         portfolio.cash_balance += total_value
 
         if holding.quantity == 0:
             db.delete(holding)
         
-        trade = Trade(
+        new_trade = Trade(
             user_id = current_user.id,
             symbol=symbol,
-            quantity=quantity,
+            quantity= trade_data.quantity,
             price=price,
             trade_type="sell"
 
         )
-        db.add(trade)
+        db.add(new_trade)
         db.commit()
 
         return {
             "message": "Stock sold",
             "symbol": symbol,
-            "quantity": quantity,
+            "quantity": new_trade.quantity,
             "price": price,
             "total_value": total_value,
             "new_balance": portfolio.cash_balance
