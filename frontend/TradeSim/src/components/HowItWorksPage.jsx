@@ -17,44 +17,9 @@ The stock market, by contrast, has returned an average of ~10% per year over the
  
 Investing isn't just for the rich. It's how ordinary people become financially free.`,
   },
+
   {
     id: 2,
-    emoji: "⚠️",
-    heading: "The Dangers & Risks",
-    body: `Investing is powerful — and that means it can go wrong.
- 
-Markets go down. Companies fail. Economic crises wipe out portfolios overnight. In 2008, the S&P 500 dropped 57%. In March 2020, it fell 34% in a matter of weeks. Anyone who panicked and sold locked in catastrophic losses.
- 
-The biggest dangers for new investors:
- 
-• Emotional trading — buying high out of excitement, selling low out of fear
-• Over-concentration — putting everything into one stock or sector
-• No plan — trading without a strategy is just gambling
-• Ignoring fees — small percentages compound into massive losses over time
-• Investing money you need soon — markets can stay down for years
- 
-Risk is real. But risk is also manageable. Education, patience, and diversification are your best defenses. The investors who lose the most are usually the ones who understood the least before they started.
- 
-That's exactly why TradeSim exists.`,
-  },
-  {
-    id: 3,
-    emoji: "📈",
-    heading: "Scalability & Long-Term Thinking",
-    body: `The most powerful force in investing isn't picking the right stock — it's time.
- 
-Compound interest means your returns generate their own returns. $1,000 invested at 10% annually becomes $2,594 in 10 years. In 30 years, it's $17,449. In 40 years, $45,259. You didn't add a single extra dollar.
- 
-This is why starting early matters more than starting big. A 22-year-old investing $200/month will almost always out-earn a 35-year-old investing $500/month — even though they contribute far less in total.
- 
-Scalability works the other way too. As your income grows, you scale your contributions. As your knowledge grows, you refine your strategy. As your portfolio grows, it generates returns that dwarf what you put in.
- 
-The barrier isn't money. It's knowledge and confidence. Most people never start because they don't know where to begin — and the financial industry hasn't made it easy to learn.
- 
-We built TradeSim to change that.`,
-  },
-  {
-    id: 4,
     emoji: "🎮",
     heading: "What Is TradeSim?",
     body: `TradeSim is a gamified paper trading platform built to make investing education accessible, engaging, and risk-free.
@@ -82,13 +47,7 @@ const team = [
     name: "Trevor Ngo",
     role: "Backend Developer & Co-Founder",
     emoji: "🦊",
-    bio: `Trevor powers the engine behind TradeSim — building the APIs, authentication systems, and data infrastructure that make the platform run.
- 
-His background is in systems and logic, but his interest in this project runs deeper than code. He watched people around him make costly financial mistakes that better education could have prevented.
- 
-TradeSim is his answer to that problem: give people a safe environment to experiment, fail, learn, and grow — before real money is ever on the line.
- 
-"The best time to make your mistakes is when they don't cost you anything."`,
+    bio: `Hi, I’m Trevor — the backend developer behind TradeSim. Growing up, I saw how confusing investing could be for people around me, and how easy it was to make costly mistakes without the right knowledge. That stuck with me. As I got deeper into tech, I became interested in building systems that could simplify complex problems and make them more accessible to everyone. TradeSim was built as a response to that — creating a safe space where people can learn, experiment, and build confidence in investing before putting real money on the line.'`,
   },
 ];
  
