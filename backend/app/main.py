@@ -14,7 +14,11 @@ app = FastAPI(title="Paper Trading Platform API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:5174"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://localhost:5175",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -26,19 +30,26 @@ def register(user: UserCreate):
     db = session_local()
     try:
         if len(user.password) < 10:
-            raise HTTPException(status_code=400, detail="Password must be at least 10 characters")
+            raise HTTPException(
+                status_code=400, detail="Password must be at least 10 characters")
         if not re.search(r"[A-Z]", user.password):
-            raise HTTPException(status_code=400, detail="Password must contain at least one uppercase letter")
+            raise HTTPException(
+                status_code=400, detail="Password must contain at least one uppercase letter")
         if not re.search(r"[0-9]", user.password):
-            raise HTTPException(status_code=400, detail="Password must contain at least one number")
+            raise HTTPException(
+                status_code=400, detail="Password must contain at least one number")
         if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", user.password):
-            raise HTTPException(status_code=400, detail="Password must contain at least one special character")
+            raise HTTPException(
+                status_code=400, detail="Password must contain at least one special character")
 
-        existing_user = db.query(User).filter(User.username == user.username).first()
+        existing_user = db.query(User).filter(
+            User.username == user.username).first()
         if existing_user:
-            raise HTTPException(status_code=400, detail="Username already exists")
+            raise HTTPException(
+                status_code=400, detail="Username already exists")
 
-        existing_email = db.query(User).filter(User.email == user.email).first()
+        existing_email = db.query(User).filter(
+            User.email == user.email).first()
         if existing_email:
             raise HTTPException(status_code=400, detail="Email already exists")
 
@@ -107,7 +118,8 @@ def read_current_user(current_user: User = Depends(get_current_user)):
 def get_portfolio(current_user: User = Depends(get_current_user)):
     db = session_local()
     try:
-        portfolio = db.query(Portfolio).filter(Portfolio.user_id == current_user.id).first()
+        portfolio = db.query(Portfolio).filter(
+            Portfolio.user_id == current_user.id).first()
 
         if not portfolio:
             raise HTTPException(status_code=404, detail="Portfolio not found")
@@ -125,13 +137,15 @@ def get_portfolio(current_user: User = Depends(get_current_user)):
 def buy_stock(trade_data: TradeCreate, current_user: User = Depends(get_current_user)):
     db = session_local()
     try:
-        portfolio = db.query(Portfolio).filter(Portfolio.user_id == current_user.id).first()
+        portfolio = db.query(Portfolio).filter(
+            Portfolio.user_id == current_user.id).first()
 
         if not portfolio:
             raise HTTPException(status_code=404, detail="Portfolio not found")
 
         if trade_data.quantity <= 0:
-            raise HTTPException(status_code=400, detail="Quantity must be greater than 0")
+            raise HTTPException(
+                status_code=400, detail="Quantity must be greater than 0")
 
         price = 100.0
         total_cost = price * trade_data.quantity
@@ -183,7 +197,8 @@ def buy_stock(trade_data: TradeCreate, current_user: User = Depends(get_current_
 def get_holdings(current_user: User = Depends(get_current_user)):
     db = session_local()
     try:
-        holdings = db.query(Holding).filter(Holding.user_id == current_user.id).all()
+        holdings = db.query(Holding).filter(
+            Holding.user_id == current_user.id).all()
 
         return [
             {
@@ -200,13 +215,15 @@ def get_holdings(current_user: User = Depends(get_current_user)):
 def sell_stock(trade_data: TradeCreate, current_user: User = Depends(get_current_user)):
     db = session_local()
     try:
-        portfolio = db.query(Portfolio).filter(Portfolio.user_id == current_user.id).first()
+        portfolio = db.query(Portfolio).filter(
+            Portfolio.user_id == current_user.id).first()
 
         if not portfolio:
             raise HTTPException(status_code=404, detail="Portfolio not found")
 
         if trade_data.quantity <= 0:
-            raise HTTPException(status_code=400, detail="Quantity must be greater than 0")
+            raise HTTPException(
+                status_code=400, detail="Quantity must be greater than 0")
 
         symbol = trade_data.symbol.upper()
         price = 100.0
@@ -218,10 +235,12 @@ def sell_stock(trade_data: TradeCreate, current_user: User = Depends(get_current
         ).first()
 
         if not holding:
-            raise HTTPException(status_code=404, detail="You do not own this stock")
+            raise HTTPException(
+                status_code=404, detail="You do not own this stock")
 
         if holding.quantity < trade_data.quantity:
-            raise HTTPException(status_code=400, detail="Not enough shares to sell")
+            raise HTTPException(
+                status_code=400, detail="Not enough shares to sell")
 
         holding.quantity -= trade_data.quantity
         portfolio.cash_balance += total_value
