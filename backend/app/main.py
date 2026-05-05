@@ -6,11 +6,24 @@ from app.session import session_local
 from app.auth import hash_password, verify_password, create_access_token, get_current_user
 from app.models import User, Portfolio, Trade, Holding
 from app.schemas import UserCreate, UserLogin, TradeCreate
+from fastapi.middleware.cors import CORSMiddleware
 
 Base.metadata.create_all(bind=engine) # create the table if table doesnt exist 
 
 app = FastAPI(title="Paper Trading Platform API")
+app.add_middleware(
 
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+
+)
+
+
+def get_stock_price(symbol: str):
+    return 100.0
 
 @app.post("/register")
 def register(user: UserCreate):
