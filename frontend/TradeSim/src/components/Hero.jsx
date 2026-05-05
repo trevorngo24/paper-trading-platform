@@ -16,7 +16,7 @@ export default function Hero() {
       </p>
       <div className="mt-8 flex justify-center gap-4 flex-wrap">
         <button
-          onClick={() => navigate("/learn")}
+          onClick={() => navigate("/login")}
           className="font-body text-base px-8 py-3
                      bg-[#aacddc] text-[#1a2a3a] font-bold hover:brightness-110
                      transition-all duration-200 pulse-border pixel-card"
