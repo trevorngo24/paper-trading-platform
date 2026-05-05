@@ -14,7 +14,7 @@ app = FastAPI(title="Paper Trading Platform API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["http://localhost:5173", "http://localhost:5174"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -257,7 +257,6 @@ def get_trades(current_user: User = Depends(get_current_user)):
     db = session_local()
     try:
         trades = db.query(Trade).filter(Trade.user_id == current_user.id).all()
-
         return [
             {
                 "symbol": t.symbol,
