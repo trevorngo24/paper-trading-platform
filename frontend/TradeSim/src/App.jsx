@@ -6,6 +6,7 @@ import HowItWorksPage from "./components/HowItWorksPage";
 import PracticePage from "./components/PracticePage";
 import LoginPage from "./components/LoginPage";
 import DashboardPage from "./components/DashboardPage";
+import QuizPage from "./pages/QuizPage";
 
 export default function App() {
   return (
@@ -16,6 +17,7 @@ export default function App() {
         <Route path="/pricing"     element={<PricingPage />}   />
         <Route path="/howitworks"  element={<HowItWorksPage />} />
         <Route path="/practice"    element={<PracticePage />}  />
+        <Route path="/quiz" element={<QuizPage />} />
         <Route path="/dashboard"   element={<DashboardPage />} />
         <Route path="/login"       element={<LoginPage />}     />
       </Routes>
