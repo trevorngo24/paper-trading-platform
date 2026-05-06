@@ -7,7 +7,6 @@ from app.session import session_local
 from app.auth import hash_password, verify_password, create_access_token, get_current_user
 from app.models import User, Portfolio, Trade, Holding
 from app.schemas import UserCreate, TradeCreate
-import requests
 
 Base.metadata.create_all(bind=engine)
 
@@ -27,13 +26,15 @@ app.add_middleware(
 
 FINNHUB_KEY = "d7t8u1hr01qugn09q5tgd7t8u1hr01qugn09q5u0"
 
+
 def get_stock_price(symbol: str):
     url = f"https://finnhub.io/api/v1/quote?symbol={symbol.upper()}&token={FINNHUB_KEY}"
     response = requests.get(url)
     data = response.json()
 
     if "c" not in data or data["c"] == 0:
-        raise HTTPException(status_code=400, detail="Invalid stock symbol or price unavailable")
+        raise HTTPException(
+            status_code=400, detail="Invalid stock symbol or price unavailable")
 
     return float(data["c"])
 
