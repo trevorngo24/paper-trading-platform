@@ -1,4 +1,5 @@
 import re
+import requests
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
@@ -7,7 +8,6 @@ from app.session import session_local
 from app.auth import hash_password, verify_password, create_access_token, get_current_user
 from app.models import User, Portfolio, Trade, Holding
 from app.schemas import UserCreate, TradeCreate
-
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Paper Trading Platform API")
