@@ -3,7 +3,7 @@ import PixelSky from "./PixelSky";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 
-const FINNHUB_KEY = "d7skm7pr01qorsvj3gug";
+const FINNHUB_KEY = "d7t8u1hr01qugn09q5tgd7t8u1hr01qugn09q5u0";
 const API_BASE = "http://localhost:8000";
 
 function authHeaders() {
