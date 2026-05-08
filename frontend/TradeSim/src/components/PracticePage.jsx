@@ -3,7 +3,7 @@ import PixelSky from "./PixelSky";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 
-const FINNHUB_KEY = "d7t8u1hr01qugn09q5tgd7t8u1hr01qugn09q5u0";
+const FINNHUB_KEY = "d7skm7pr01qorsvj3gu0d7skm7pr01qorsvj3gug";
 const API_BASE = "http://localhost:8000";
 
 function authHeaders() {
@@ -27,6 +27,7 @@ export default function PracticePage() {
   const [holdings, setHoldings] = useState([]);
   const [trades, setTrades] = useState([]);
   const [portfolio, setPortfolio] = useState(null);
+  const [portfolioValue, setPortfolioValue] = useState(null);
 
   const [activeTab, setActiveTab] = useState("search");
 
@@ -34,12 +35,24 @@ export default function PracticePage() {
     fetchPortfolio();
     fetchHoldings();
     fetchTrades();
+    fetchPortfolioValue();
+
+    // auto-refresh portfolio value every 60 seconds
+    const interval = setInterval(fetchPortfolioValue, 60000);
+    return () => clearInterval(interval);
   }, []);
 
   async function fetchPortfolio() {
     try {
       const res = await fetch(API_BASE + "/portfolio", { headers: authHeaders() });
       if (res.ok) setPortfolio(await res.json());
+    } catch {}
+  }
+
+  async function fetchPortfolioValue() {
+    try {
+      const res = await fetch(API_BASE + "/portfolio/value", { headers: authHeaders() });
+      if (res.ok) setPortfolioValue(await res.json());
     } catch {}
   }
 
@@ -113,6 +126,7 @@ export default function PracticePage() {
         fetchPortfolio();
         fetchHoldings();
         fetchTrades();
+        fetchPortfolioValue();
       }
     } catch {
       setTradeMsg("✕ Request failed");
@@ -139,6 +153,7 @@ export default function PracticePage() {
         fetchPortfolio();
         fetchHoldings();
         fetchTrades();
+        fetchPortfolioValue();
       }
     } catch {
       setTradeMsg("✕ Request failed");
@@ -160,14 +175,30 @@ export default function PracticePage() {
           <p className="font-display text-[#81a6c6] tracking-widest mb-2" style={{ fontSize: "9px" }}>
             ◆ PRACTICE MODE ◆
           </p>
-          <h1 className="font-display text-3xl text-[#f3e3d0] mb-2">PRACTICE</h1>
-          {portfolio && (
-            <p className="font-body text-[#d2c4b4] text-sm">
-              Cash Balance:{" "}
-              <span className="font-display text-[#f3e3d0] tracking-widest">
-                ${portfolio.cash_balance.toFixed(2)}
-              </span>
-            </p>
+          <h1 className="font-display text-3xl text-[#f3e3d0] mb-4">PRACTICE</h1>
+
+          {/* Portfolio Summary */}
+          {portfolioValue && (
+            <div className="flex justify-center gap-8 flex-wrap">
+              <div>
+                <p className="font-display text-[#81a6c6] tracking-widest mb-1" style={{ fontSize: "8px" }}>CASH</p>
+                <p className="font-display text-[#f3e3d0] tracking-widest" style={{ fontSize: "14px" }}>
+                  ${portfolioValue.cash_balance.toFixed(2)}
+                </p>
+              </div>
+              <div>
+                <p className="font-display text-[#81a6c6] tracking-widest mb-1" style={{ fontSize: "8px" }}>MARKET VALUE</p>
+                <p className="font-display text-[#f3e3d0] tracking-widest" style={{ fontSize: "14px" }}>
+                  ${portfolioValue.market_value.toFixed(2)}
+                </p>
+              </div>
+              <div>
+                <p className="font-display text-[#81a6c6] tracking-widest mb-1" style={{ fontSize: "8px" }}>TOTAL VALUE</p>
+                <p className="font-display text-[#f3e3d0] tracking-widest" style={{ fontSize: "14px" }}>
+                  ${portfolioValue.total_value.toFixed(2)}
+                </p>
+              </div>
+            </div>
           )}
         </div>
 
@@ -250,11 +281,8 @@ export default function PracticePage() {
 
                 <div className="border-t border-[#81a6c6] mb-6" style={{ opacity: 0.2 }} />
 
-                {/* Trade Controls */}
                 <div className="flex items-center gap-2 mb-4">
-                  <label className="font-display text-[#81a6c6] tracking-widest" style={{ fontSize: "9px" }}>
-                    QTY
-                  </label>
+                  <label className="font-display text-[#81a6c6] tracking-widest" style={{ fontSize: "9px" }}>QTY</label>
                   <input
                     type="number"
                     min="1"
@@ -302,26 +330,42 @@ export default function PracticePage() {
 
         {/* Holdings Tab */}
         {activeTab === "holdings" && (
-          <div className="max-w-sm mx-auto">
+          <div className="max-w-lg mx-auto">
             <p className="font-display text-[#81a6c6] tracking-widest mb-6 text-center" style={{ fontSize: "9px" }}>
               ◆ YOUR HOLDINGS ◆
             </p>
-            {holdings.length === 0 ? (
+            {!portfolioValue || portfolioValue.positions.length === 0 ? (
               <p className="font-body text-[#d2c4b4] text-xs text-center" style={{ opacity: 0.5 }}>
                 No holdings yet. Buy some stocks!
               </p>
             ) : (
-              <div className="border border-[#81a6c6] divide-y" style={{ borderColor: "rgba(129,166,198,0.3)" }}>
-                {holdings.map((h) => (
-                  <div key={h.symbol} className="flex justify-between items-center px-5 py-3">
-                    <span className="font-display text-[#f3e3d0] tracking-widest" style={{ fontSize: "13px" }}>
-                      {h.symbol}
+              <div className="border border-[#81a6c6]" style={{ borderColor: "rgba(129,166,198,0.3)" }}>
+                {/* Table header */}
+                <div className="flex px-5 py-2 border-b" style={{ borderColor: "rgba(129,166,198,0.2)", opacity: 0.6 }}>
+                  {["SYMBOL", "QTY", "AVG COST", "PRICE", "VALUE", "GAIN/LOSS"].map((h) => (
+                    <span key={h} className="font-display text-[#81a6c6] tracking-widest flex-1" style={{ fontSize: "7px" }}>
+                      {h}
                     </span>
-                    <span className="font-body text-[#d2c4b4] text-xs">
-                      {h.quantity} share{h.quantity !== 1 ? "s" : ""}
-                    </span>
-                  </div>
-                ))}
+                  ))}
+                </div>
+
+                {portfolioValue.positions.map((p) => {
+                  const gl = p.gain_loss >= 0;
+                  return (
+                    <div key={p.symbol} className="flex items-center px-5 py-4 border-b last:border-0" style={{ borderColor: "rgba(129,166,198,0.1)" }}>
+                      <span className="font-display text-[#f3e3d0] tracking-widest flex-1" style={{ fontSize: "12px" }}>
+                        {p.symbol}
+                      </span>
+                      <span className="font-body text-[#d2c4b4] text-xs flex-1">{p.quantity}</span>
+                      <span className="font-body text-[#d2c4b4] text-xs flex-1">${p.avg_cost.toFixed(2)}</span>
+                      <span className="font-body text-[#d2c4b4] text-xs flex-1">${p.current_price.toFixed(2)}</span>
+                      <span className="font-body text-[#d2c4b4] text-xs flex-1">${p.market_value.toFixed(2)}</span>
+                      <span className="font-display tracking-widest flex-1" style={{ fontSize: "9px", color: gl ? "#4ade80" : "#f87171" }}>
+                        {gl ? "▲" : "▼"} ${Math.abs(p.gain_loss).toFixed(2)} ({p.gain_loss_pct.toFixed(2)}%)
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

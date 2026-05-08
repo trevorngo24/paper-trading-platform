@@ -8,6 +8,7 @@ from app.session import session_local
 from app.auth import hash_password, verify_password, create_access_token, get_current_user
 from app.models import User, Portfolio, Trade, Holding
 from app.schemas import UserCreate, TradeCreate
+
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Paper Trading Platform API")
@@ -24,10 +25,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-FINNHUB_KEY = "d7t8u1hr01qugn09q5tgd7t8u1hr01qugn09q5u0"
+FINNHUB_KEY = "d7skm7pr01qorsvj3gu0d7skm7pr01qorsvj3gug"
 
 
-def get_stock_price(symbol: str):
+def get_stock_price(symbol: str) -> float:
     url = f"https://finnhub.io/api/v1/quote?symbol={symbol.upper()}&token={FINNHUB_KEY}"
     response = requests.get(url)
     data = response.json()
@@ -68,19 +69,16 @@ def register(user: UserCreate):
             raise HTTPException(status_code=400, detail="Email already exists")
 
         hashed_pw = hash_password(user.password)
-
         new_user = User(
             username=user.username,
             email=user.email,
             hashed_password=hashed_pw,
         )
-
         db.add(new_user)
         db.commit()
         db.refresh(new_user)
 
         portfolio = Portfolio(user_id=new_user.id, cash_balance=10000.0)
-
         db.add(portfolio)
         db.commit()
         db.refresh(portfolio)
@@ -101,15 +99,11 @@ def login(user: OAuth2PasswordRequestForm = Depends()):
     db = session_local()
     try:
         db_user = db.query(User).filter(User.username == user.username).first()
-
         if not db_user:
             raise HTTPException(status_code=404, detail="User not found")
-
         if not verify_password(user.password, db_user.hashed_password):
             raise HTTPException(status_code=401, detail="Invalid password")
-
         access_token = create_access_token(data={"sub": str(db_user.id)})
-
         return {
             "message": "Login successful",
             "access_token": access_token,
@@ -134,14 +128,68 @@ def get_portfolio(current_user: User = Depends(get_current_user)):
     try:
         portfolio = db.query(Portfolio).filter(
             Portfolio.user_id == current_user.id).first()
-
         if not portfolio:
             raise HTTPException(status_code=404, detail="Portfolio not found")
-
         return {
             "user_id": current_user.id,
             "username": current_user.username,
             "cash_balance": portfolio.cash_balance,
+        }
+    finally:
+        db.close()
+
+
+@app.get("/portfolio/value")
+def get_portfolio_value(current_user: User = Depends(get_current_user)):
+    db = session_local()
+    try:
+        portfolio = db.query(Portfolio).filter(
+            Portfolio.user_id == current_user.id).first()
+        holdings = db.query(Holding).filter(
+            Holding.user_id == current_user.id).all()
+
+        positions = []
+        total_market_value = 0
+
+        for h in holdings:
+            try:
+                current_price = get_stock_price(h.symbol)
+            except:
+                current_price = 0.0
+
+            market_value = current_price * h.quantity
+
+            # calculate average cost from all buy trades for this symbol
+            buy_trades = db.query(Trade).filter(
+                Trade.user_id == current_user.id,
+                Trade.symbol == h.symbol,
+                Trade.trade_type == "buy"
+            ).all()
+
+            total_spent = sum(t.price * t.quantity for t in buy_trades)
+            total_bought = sum(t.quantity for t in buy_trades)
+            avg_cost = total_spent / total_bought if total_bought else 0
+            gain_loss = market_value - (avg_cost * h.quantity)
+            gain_loss_pct = (gain_loss / (avg_cost * h.quantity)
+                             ) * 100 if avg_cost > 0 else 0
+
+            total_market_value += market_value
+
+            positions.append({
+                "symbol": h.symbol,
+                "quantity": h.quantity,
+                "avg_cost": round(avg_cost, 2),
+                "current_price": round(current_price, 2),
+                "market_value": round(market_value, 2),
+                "gain_loss": round(gain_loss, 2),
+                "gain_loss_pct": round(gain_loss_pct, 2),
+            })
+
+        return {
+            "cash_balance": round(portfolio.cash_balance, 2),
+            "market_value": round(total_market_value, 2),
+            "total_value": round(portfolio.cash_balance + total_market_value, 2),
+            "positions": positions,
         }
     finally:
         db.close()
@@ -156,7 +204,6 @@ def buy_stock(trade_data: TradeCreate, current_user: User = Depends(get_current_
 
         if not portfolio:
             raise HTTPException(status_code=404, detail="Portfolio not found")
-
         if trade_data.quantity <= 0:
             raise HTTPException(
                 status_code=400, detail="Quantity must be greater than 0")
@@ -191,7 +238,6 @@ def buy_stock(trade_data: TradeCreate, current_user: User = Depends(get_current_
             price=price,
             trade_type="buy",
         )
-
         db.add(new_trade)
         db.commit()
 
@@ -213,7 +259,6 @@ def get_holdings(current_user: User = Depends(get_current_user)):
     try:
         holdings = db.query(Holding).filter(
             Holding.user_id == current_user.id).all()
-
         return [
             {
                 "symbol": h.symbol,
@@ -234,7 +279,6 @@ def sell_stock(trade_data: TradeCreate, current_user: User = Depends(get_current
 
         if not portfolio:
             raise HTTPException(status_code=404, detail="Portfolio not found")
-
         if trade_data.quantity <= 0:
             raise HTTPException(
                 status_code=400, detail="Quantity must be greater than 0")
@@ -251,7 +295,6 @@ def sell_stock(trade_data: TradeCreate, current_user: User = Depends(get_current
         if not holding:
             raise HTTPException(
                 status_code=404, detail="You do not own this stock")
-
         if holding.quantity < trade_data.quantity:
             raise HTTPException(
                 status_code=400, detail="Not enough shares to sell")
@@ -269,7 +312,6 @@ def sell_stock(trade_data: TradeCreate, current_user: User = Depends(get_current
             price=price,
             trade_type="sell",
         )
-
         db.add(new_trade)
         db.commit()
 
